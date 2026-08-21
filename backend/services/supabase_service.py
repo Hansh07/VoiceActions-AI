@@ -160,7 +160,7 @@ async def get_recent_voice_notes(limit: int = 20) -> list[dict]:
     try:
         result = (
             client.table("voice_notes")
-            .select("*, actions(*), conflicts(*)")
+            .select("*, action_items(*), conflicts(*)")
             .order("created_at", desc=True)
             .limit(limit)
             .execute()
