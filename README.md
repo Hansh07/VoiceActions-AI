@@ -5,7 +5,7 @@
 
 ---
 
-## 🎯 Problem & Person (15%)
+## 🎯 Problem & Person
 
 **Ankit**, a startup founder, sends 20 voice notes a day to his 8-person team. Half of them contradict each other — *"send the report"* in one breath, *"hold off on sending"* in the next. His team wastes 2 hours/day resolving conflicts he doesn't know he created.
 
@@ -25,7 +25,7 @@ Record a voice note **or** upload a document → we run it through a **two-model
 
 ---
 
-## 🔥 Why This Couldn't Exist in 2023 (Originality — 25%)
+## 🔥 Why This Couldn't Exist in 2023 (Originality)
 
 - **Groq Whisper** didn't exist — instant voice transcription wasn't possible
 - **Gemini 2.0 Flash** didn't exist — cheap structured extraction at this quality
@@ -34,7 +34,7 @@ Record a voice note **or** upload a document → we run it through a **two-model
 
 ---
 
-## 🏗️ Technical Depth (25%) — All 8 Hackathon Layers
+## 🏗️ Technical Depth 
 
 | # | Layer | Technology | What We Built |
 |---|-------|-----------|--------------|
@@ -94,7 +94,7 @@ python run_eval.py --all
 
 ---
 
-## ⚠️ Failure Awareness (15%)
+## ⚠️ Failure Awareness 
 
 See [`FAILURE_LOG.md`](FAILURE_LOG.md) for an honest account of what's broken, what we'd fix with more time, and what it would cost.
 
