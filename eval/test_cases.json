@@ -1,0 +1,186 @@
+{
+  "version": "1.0",
+  "description": "VoiceActions AI eval test cases",
+  "test_cases": [
+    {
+      "id": "clean_01",
+      "category": "clean",
+      "input_text": "Rahul, please send the quarterly report to the client by Friday. Priya, update the project dashboard before the standup tomorrow.",
+      "expected_actions": 2,
+      "expected_conflicts": 0,
+      "expected_ambiguities": 0,
+      "notes": "Two clear, non-conflicting tasks with owners and deadlines"
+    },
+    {
+      "id": "clean_02",
+      "category": "clean",
+      "input_text": "Schedule the team meeting for next Monday at 10 AM. Book the conference room B.",
+      "expected_actions": 2,
+      "expected_conflicts": 0,
+      "expected_ambiguities": 0,
+      "notes": "Simple tasks, no owner specified"
+    },
+    {
+      "id": "clean_03",
+      "category": "clean",
+      "input_text": "Amit, deploy the staging build today. Run the regression tests after deployment.",
+      "expected_actions": 2,
+      "expected_conflicts": 0,
+      "expected_ambiguities": 0,
+      "notes": "Sequential tasks with dependency"
+    },
+    {
+      "id": "clean_04",
+      "category": "clean",
+      "input_text": "Call the vendor about the delayed shipment. Follow up with an email summarizing the call.",
+      "expected_actions": 2,
+      "expected_conflicts": 0,
+      "expected_ambiguities": 0,
+      "notes": "Clear sequential tasks"
+    },
+    {
+      "id": "clean_05",
+      "category": "clean",
+      "input_text": "Prepare the investor pitch deck for next week. Include the Q3 revenue numbers and user growth metrics.",
+      "expected_actions": 1,
+      "expected_conflicts": 0,
+      "expected_ambiguities": 0,
+      "notes": "Single task with details"
+    },
+    {
+      "id": "conflict_01",
+      "category": "conflict",
+      "input_text": "Rahul, send the report to the client by Friday. Also tell Priya to hold off on sending anything to the client until we review.",
+      "expected_actions": 2,
+      "expected_conflicts": 1,
+      "expected_ambiguities": 0,
+      "notes": "Classic conflict: send vs hold off sending to client"
+    },
+    {
+      "id": "conflict_02",
+      "category": "conflict",
+      "input_text": "We need to ship the feature by end of day. Also make sure QA does thorough testing, take as long as needed for quality.",
+      "expected_actions": 2,
+      "expected_conflicts": 1,
+      "expected_ambiguities": 0,
+      "notes": "Implicit conflict: rush vs take time for quality"
+    },
+    {
+      "id": "conflict_03",
+      "category": "conflict",
+      "input_text": "Cut the marketing budget by 30 percent. And launch the new ad campaign across all social media platforms next week.",
+      "expected_actions": 2,
+      "expected_conflicts": 1,
+      "expected_ambiguities": 0,
+      "notes": "Conflicting: cut budget vs launch campaign"
+    },
+    {
+      "id": "conflict_04",
+      "category": "conflict",
+      "input_text": "Tell the team to work from home this week. Also schedule an in-person workshop for Wednesday.",
+      "expected_actions": 2,
+      "expected_conflicts": 1,
+      "expected_ambiguities": 0,
+      "notes": "WFH vs in-person conflict"
+    },
+    {
+      "id": "conflict_05",
+      "category": "conflict",
+      "input_text": "Freeze all hiring immediately. And schedule interviews for the three shortlisted candidates this week.",
+      "expected_actions": 2,
+      "expected_conflicts": 1,
+      "expected_ambiguities": 0,
+      "notes": "Hiring freeze vs scheduling interviews"
+    },
+    {
+      "id": "hindi_01",
+      "category": "hindi-english",
+      "input_text": "Rahul ko bol do ki report Friday tak send kar de. Aur Priya se kaho ki client ko kuch bhi mat bhejo review hone tak.",
+      "expected_actions": 2,
+      "expected_conflicts": 1,
+      "expected_ambiguities": 0,
+      "notes": "Hindi-English code-mixed with conflict"
+    },
+    {
+      "id": "hindi_02",
+      "category": "hindi-english",
+      "input_text": "Kal ki meeting cancel kar do. Aur sabko invite bhejo for the quarterly review meeting kal.",
+      "expected_actions": 2,
+      "expected_conflicts": 1,
+      "expected_ambiguities": 0,
+      "notes": "Cancel meeting vs send invite for meeting tomorrow"
+    },
+    {
+      "id": "hindi_03",
+      "category": "hindi-english",
+      "input_text": "Website ka new design ready karo by next week. Budget tight hai toh freelancer mat hire karo.",
+      "expected_actions": 1,
+      "expected_conflicts": 0,
+      "expected_ambiguities": 1,
+      "notes": "Design task with constraint, ambiguous about who does it"
+    },
+    {
+      "id": "ambiguous_01",
+      "category": "ambiguous",
+      "input_text": "Send it to him before the deadline. Make sure she reviews it first.",
+      "expected_actions": 2,
+      "expected_conflicts": 0,
+      "expected_ambiguities": 2,
+      "notes": "Unclear pronouns: who is 'him', 'she', what is 'it', what deadline?"
+    },
+    {
+      "id": "ambiguous_02",
+      "category": "ambiguous",
+      "input_text": "Update the thing we discussed yesterday. Also fix the issue that came up.",
+      "expected_actions": 2,
+      "expected_conflicts": 0,
+      "expected_ambiguities": 2,
+      "notes": "Vague references: 'the thing', 'the issue'"
+    },
+    {
+      "id": "ambiguous_03",
+      "category": "ambiguous",
+      "input_text": "Tell the team about the changes. Get it done soon.",
+      "expected_actions": 2,
+      "expected_conflicts": 0,
+      "expected_ambiguities": 2,
+      "notes": "Which team? What changes? How soon? What needs to be done?"
+    },
+    {
+      "id": "edge_empty",
+      "category": "edge",
+      "input_text": "",
+      "expected_actions": 0,
+      "expected_conflicts": 0,
+      "expected_ambiguities": 0,
+      "notes": "Empty input — should handle gracefully"
+    },
+    {
+      "id": "edge_noise",
+      "category": "edge",
+      "input_text": "um uh like you know uh hmm yeah so basically uh",
+      "expected_actions": 0,
+      "expected_conflicts": 0,
+      "expected_ambiguities": 0,
+      "notes": "Filler words only — no actionable content"
+    },
+    {
+      "id": "stress_long",
+      "category": "stress",
+      "input_text": "Okay so first thing, Rahul needs to finish the API integration by Wednesday. Then Priya should start on the frontend once Rahul is done. We also need Amit to set up the database before Rahul starts. Oh wait, actually tell Rahul he can start without the database, we will mock it. No wait, we need real data, so Amit should prioritize the database. And Priya, don't wait for Rahul, start the frontend now with dummy data. Actually Priya should coordinate with Rahul directly. One more thing, we need to present to the client on Friday, so everything must be done by Thursday EOD. But quality is more important than deadline, take Friday if needed.",
+      "expected_actions": 6,
+      "expected_conflicts": 3,
+      "expected_ambiguities": 0,
+      "notes": "Long rambling note with multiple contradictions and changed decisions"
+    },
+    {
+      "id": "stress_multi",
+      "category": "stress",
+      "input_text": "High priority: Fix the production bug immediately. Medium priority: Update the documentation this week. Low priority: Refactor the auth module when you get time. But actually, make the auth refactor high priority because we have security audit next month. And push the documentation to next sprint.",
+      "expected_actions": 3,
+      "expected_conflicts": 1,
+      "expected_ambiguities": 0,
+      "notes": "Priority reassignment creates conflict with original instructions"
+    }
+  ]
+}

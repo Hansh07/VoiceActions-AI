@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+python-multipart
+groq
+google-generativeai
+supabase
+python-dotenv
+pydantic
+httpx

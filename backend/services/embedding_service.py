@@ -1,0 +1,49 @@
+"""
+VoiceActions AI — Embedding Service
+Generates embeddings via Gemini for pgvector semantic search.
+"""
+
+import time
+import google.generativeai as genai
+from config import GEMINI_API_KEY, CONFIG
+
+genai.configure(api_key=GEMINI_API_KEY)
+
+
+async def generate_embedding(text: str) -> list[float]:
+    """Generate a single embedding vector for a text."""
+    try:
+        model = CONFIG["embedding"]["model"]
+        result = genai.embed_content(
+            model=f"models/{model}",
+            content=text,
+            task_type="retrieval_document",
+        )
+        return result["embedding"]
+    except Exception as e:
+        print(f"[Embedding] Failed: {e}")
+        return []
+
+
+async def generate_query_embedding(text: str) -> list[float]:
+    """Generate embedding for a search query."""
+    try:
+        model = CONFIG["embedding"]["model"]
+        result = genai.embed_content(
+            model=f"models/{model}",
+            content=text,
+            task_type="retrieval_query",
+        )
+        return result["embedding"]
+    except Exception as e:
+        print(f"[Embedding] Query embedding failed: {e}")
+        return []
+
+
+async def generate_batch_embeddings(texts: list[str]) -> list[list[float]]:
+    """Generate embeddings for multiple texts."""
+    embeddings = []
+    for text in texts:
+        emb = await generate_embedding(text)
+        embeddings.append(emb)
+    return embeddings
