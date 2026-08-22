@@ -5,8 +5,12 @@ This is the curveball-defense file — any judge-mandated change starts here.
 """
 
 import os
+from pathlib import Path
 from dotenv import load_dotenv
 
+# Load from backend/.env and current working directory .env
+backend_env = Path(__file__).resolve().parent / ".env"
+load_dotenv(dotenv_path=backend_env)
 load_dotenv()
 
 # ─── API Keys ────────────────────────────────────────────
@@ -14,6 +18,10 @@ GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 SUPABASE_URL = os.getenv("SUPABASE_URL", "")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY", "")
+
+if GEMINI_API_KEY:
+    os.environ["GOOGLE_API_KEY"] = GEMINI_API_KEY
+    os.environ["GEMINI_API_KEY"] = GEMINI_API_KEY
 
 # ─── Model Configuration ─────────────────────────────────
 CONFIG = {
@@ -32,7 +40,7 @@ CONFIG = {
     "analysis": {
         "primary": {
             "provider": "gemini",
-            "model": "gemini-flash-latest",
+            "model": "gemini-flash-lite-latest",
         },
         "fallback": {
             "provider": "groq",
@@ -50,7 +58,7 @@ CONFIG = {
     "embedding": {
         "provider": "gemini",
         "model": "gemini-embedding-001",
-        "dimensions": 768,
+        "dimensions": 3072,
     },
     "features": {
         "conflict_detection": True,

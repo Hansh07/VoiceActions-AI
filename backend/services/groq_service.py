@@ -5,6 +5,7 @@ Handles: Whisper transcription + Llama verification
 
 import time
 import json
+import asyncio
 from groq import Groq
 from config import GROQ_API_KEY, CONFIG
 from prompts import VERIFICATION_PROMPT, VERIFICATION_PROMPT_VERSION
@@ -72,7 +73,7 @@ async def transcribe_audio(audio_file_path: str) -> tuple[TranscriptionResult, P
             last_error = str(e)
             retries += 1
             if retries <= max_retries:
-                time.sleep(1 * retries)  # Backoff
+                await asyncio.sleep(1 * retries)  # Backoff
 
     # All retries failed
     latency = int((time.time() - start) * 1000)
@@ -97,7 +98,8 @@ async def verify_analysis(
     start = time.time()
 
     try:
-        user_message = f"""ORIGINAL TRANSCRIPT:
+        user_message = f"""/no_think
+ORIGINAL TRANSCRIPT:
 {transcript}
 
 FIRST AI's ANALYSIS:

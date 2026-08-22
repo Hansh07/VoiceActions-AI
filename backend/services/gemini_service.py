@@ -5,6 +5,7 @@ Handles: Transcript analysis (action extraction + conflict detection)
 
 import time
 import json
+import asyncio
 import google.generativeai as genai
 from config import GEMINI_API_KEY, CONFIG
 from prompts import ANALYSIS_PROMPT, ANALYSIS_PROMPT_VERSION
@@ -84,7 +85,7 @@ async def analyze_transcript(transcript: str) -> tuple[AnalysisResult, Processin
             last_error = str(e)
             retries += 1
             if retries <= max_retries:
-                time.sleep(1 * retries)
+                await asyncio.sleep(1 * retries)
 
     latency = int((time.time() - start) * 1000)
     log = ProcessingLog(
@@ -111,7 +112,7 @@ async def analyze_transcript_fallback(transcript: str) -> tuple[AnalysisResult, 
             model=model,
             messages=[
                 {"role": "system", "content": ANALYSIS_PROMPT},
-                {"role": "user", "content": f"TRANSCRIPT:\n{transcript}\n\nExtract all actions, conflicts, and ambiguities."},
+                {"role": "user", "content": f"/no_think\nTRANSCRIPT:\n{transcript}\n\nExtract all actions, conflicts, and ambiguities."},
             ],
             temperature=CONFIG["analysis"]["temperature"],
             response_format={"type": "json_object"},
