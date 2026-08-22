@@ -173,12 +173,19 @@ export default function Home() {
     try {
       const res = await processAudioStream(blob, (e) => setSteps((p) => [...p, e]));
       if (res) { setResult(res); setState("done"); } else throw new Error("No response");
-    } catch {
-      // Backend offline → use Web Speech API transcript for demo
-      const spokenText = liveTranscriptRef.current || "(No speech detected — try text mode)";
-      setSteps([]);
-      const res = await simulatePipeline(spokenText, (e) => setSteps((p) => [...p, e]));
-      setResult(res); setState("done");
+    } catch (err: unknown) {
+      // Only fallback to demo if it's a network/connection error (backend offline)
+      const errMsg = err instanceof Error ? err.message : "";
+      if (errMsg.includes("fetch") || errMsg.includes("Failed") || errMsg.includes("NetworkError") || errMsg.includes("ECONNREFUSED")) {
+        // Backend truly offline → use Web Speech API transcript for demo
+        const spokenText = liveTranscriptRef.current || "(No speech detected — try text mode)";
+        setSteps([]);
+        const res = await simulatePipeline(spokenText, (e) => setSteps((p) => [...p, e]));
+        setResult(res); setState("done");
+      } else {
+        // Backend returned an error (bad file format, etc.) → show the actual error
+        throw err;
+      }
     }
   }), [runPipeline]);
 

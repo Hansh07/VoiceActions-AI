@@ -108,7 +108,9 @@ export async function processAudioStream(
   onStep: (event: StepEvent) => void
 ): Promise<PipelineResponse | null> {
   const formData = new FormData();
-  formData.append("audio", audioBlob, "recording.webm");
+  // Preserve original filename for uploaded files; use "recording.webm" for mic recordings
+  const fileName = (audioBlob as File).name || "recording.webm";
+  formData.append("audio", audioBlob, fileName);
 
   try {
     const response = await fetch(`${API_BASE}/api/process`, {
@@ -165,7 +167,8 @@ export async function processAudioSync(
   audioBlob: Blob
 ): Promise<PipelineResponse> {
   const formData = new FormData();
-  formData.append("audio", audioBlob, "recording.webm");
+  const fileName = (audioBlob as File).name || "recording.webm";
+  formData.append("audio", audioBlob, fileName);
 
   const response = await fetch(`${API_BASE}/api/process-sync`, {
     method: "POST",
