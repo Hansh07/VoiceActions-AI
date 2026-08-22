@@ -14,6 +14,30 @@ import {
   type PipelineResponse, type StepEvent,
 } from "@/lib/api";
 
+const DEMO_PRESETS = [
+  {
+    id: "conflict",
+    badge: "⚠️ Contradiction",
+    badgeColor: "text-red-700 bg-red-50 border-red-200",
+    title: "Contradictory Orders",
+    text: "Rahul, send the client proposal by 5 PM today. Priya, hold off on sending anything until we review tomorrow.",
+  },
+  {
+    id: "hinglish",
+    badge: "🇮🇳 Hinglish",
+    badgeColor: "text-indigo-700 bg-indigo-50 border-indigo-200",
+    title: "Startup Delegation",
+    text: "Rohit tum pitch deck finalize karo by Friday. Vikram ko bolo server migration hold kare jab tak staging test pass na ho.",
+  },
+  {
+    id: "ambiguity",
+    badge: "❓ Vague Order",
+    badgeColor: "text-amber-700 bg-amber-50 border-amber-200",
+    title: "Ambiguous Request",
+    text: "Someone please fix that frontend issue soon and send the updated document to that investor.",
+  },
+];
+
 /* ── Smart demo: parse real user text into pipeline response ── */
 function extractActions(text: string): { task: string; owner: string; quote: string }[] {
   const actions: { task: string; owner: string; quote: string }[] = [];
@@ -416,6 +440,37 @@ export default function Home() {
                     <p className="text-sm text-[var(--text-muted)] italic">{liveTranscript}</p>
                   </div>
                 )}
+
+                {/* Quick 1-Click Demo Scenarios */}
+                <div className="mt-6 pt-5 border-t border-[var(--border)]">
+                  <div className="flex items-center justify-between mb-2.5">
+                    <span className="text-[11px] font-bold text-[var(--text-muted)] uppercase tracking-wider flex items-center gap-1.5">
+                      <span>⚡</span> 1-Click Demo Presets
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                    {DEMO_PRESETS.map((preset) => (
+                      <button
+                        key={preset.id}
+                        type="button"
+                        onClick={() => handleTextSubmit(preset.text)}
+                        className="text-left p-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg-section)] hover:bg-indigo-50/50 hover:border-indigo-300 hover:shadow-xs transition-all group cursor-pointer"
+                      >
+                        <div className="flex items-center justify-between mb-1">
+                          <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-md border ${preset.badgeColor}`}>
+                            {preset.badge}
+                          </span>
+                        </div>
+                        <p className="text-xs font-semibold text-[var(--text-dark)] group-hover:text-indigo-600 transition-colors">
+                          {preset.title}
+                        </p>
+                        <p className="text-[11px] text-[var(--text-muted)] line-clamp-2 mt-0.5 leading-snug">
+                          {preset.text}
+                        </p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           </div>

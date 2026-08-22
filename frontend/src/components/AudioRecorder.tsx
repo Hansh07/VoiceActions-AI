@@ -201,10 +201,14 @@ export default function AudioRecorder({
         </div>
       )}
 
-      {/* Upload fallback / Multi-file selector */}
+      {/* Upload fallback / Multi-file selector in a box */}
       {!isRecording && (
-        <label className="text-xs text-[var(--accent)] hover:underline cursor-pointer flex items-center gap-1.5 transition-colors">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <label className="w-full max-w-xs flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-[var(--border)] bg-[var(--bg-section)] hover:bg-white hover:border-indigo-300 hover:shadow-xs text-xs font-medium text-[var(--text-dark)] hover:text-indigo-600 cursor-pointer transition-all">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-indigo-500">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
           <span>{selectedFiles.length > 0 ? "Add or change files" : "Upload audio file(s) — select multiple"}</span>
           <input
             type="file"
