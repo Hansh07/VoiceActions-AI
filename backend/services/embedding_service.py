@@ -40,10 +40,17 @@ async def generate_query_embedding(text: str) -> list[float]:
         return []
 
 
+import asyncio
+
+
 async def generate_batch_embeddings(texts: list[str]) -> list[list[float]]:
-    """Generate embeddings for multiple texts."""
-    embeddings = []
-    for text in texts:
-        emb = await generate_embedding(text)
-        embeddings.append(emb)
-    return embeddings
+    """Generate embeddings for multiple texts concurrently."""
+    if not texts:
+        return []
+    try:
+        tasks = [generate_embedding(text) for text in texts]
+        results = await asyncio.gather(*tasks, return_exceptions=True)
+        return [r if isinstance(r, list) else [] for r in results]
+    except Exception as e:
+        print(f"[Embedding] Batch failed: {e}")
+        return [[] for _ in texts]

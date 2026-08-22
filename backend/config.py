@@ -49,7 +49,7 @@ CONFIG = {
     },
     "embedding": {
         "provider": "gemini",
-        "model": "text-embedding-004",
+        "model": "gemini-embedding-001",
         "dimensions": 768,
     },
     "features": {
