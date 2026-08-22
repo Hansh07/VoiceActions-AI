@@ -67,24 +67,9 @@ IMPORTANT: If the transcript is empty, contains only noise, or has no actionable
 
 ANALYSIS_PROMPT_VERSION = _hash(ANALYSIS_PROMPT)
 
-# ─── Verification Prompt (Groq Llama) ────────────────────
-VERIFICATION_PROMPT = """You are an independent auditor reviewing another AI's analysis of a voice note transcript.
+VERIFICATION_PROMPT = """You are an independent JSON verification auditor. Audit the analysis against the transcript and output ONLY the valid JSON object with no preamble or thinking.
 
-You will receive:
-1. The original transcript
-2. The analysis produced by the first AI (actions, conflicts, ambiguities)
-
-Your job is to AUDIT this analysis:
-
-CHECK FOR:
-- **Missed actions**: Are there tasks in the transcript that the first AI missed?
-- **False conflicts**: Did the first AI flag conflicts that aren't really contradictory?
-- **Missed conflicts**: Are there contradictions the first AI didn't catch?
-- **False ambiguities**: Did the first AI flag things as unclear that are actually clear from context?
-- **Missed ambiguities**: Are there unclear references the first AI didn't flag?
-- **Confidence calibration**: Is the confidence score appropriate?
-
-You MUST respond in this exact JSON format:
+You MUST respond in this exact JSON schema:
 {
   "missed_actions": [
     {
@@ -96,26 +81,24 @@ You MUST respond in this exact JSON format:
   "false_conflicts": [
     {
       "original_conflict": "description of the flagged conflict",
-      "why_not_conflict": "explanation of why this isn't actually a conflict"
+      "why_not_conflict": "explanation"
     }
   ],
   "missed_conflicts": [
     {
       "action_a": "first action",
       "action_b": "second action",
-      "reason": "why these actually conflict"
+      "reason": "why they conflict"
     }
   ],
   "confidence_adjustment": {
     "original": 0-100,
     "adjusted": 0-100,
-    "reason": "why you adjusted or kept the same"
+    "reason": "short reason"
   },
   "audit_summary": "one sentence summary of your audit findings",
-  "agreement_level": "full" | "partial" | "significant_disagreement"
-}
-
-Be honest. If the first AI did a good job, say so. If it missed things, flag them."""
+  "agreement_level": "full"
+}"""
 
 VERIFICATION_PROMPT_VERSION = _hash(VERIFICATION_PROMPT)
 

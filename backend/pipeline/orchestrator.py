@@ -198,10 +198,11 @@ async def process_audio(audio_file_path: str, on_step=None) -> PipelineResponse:
     final_confidence = analysis.confidence
     
     if CONFIG["features"]["verification_step"] and CONFIG["verification"]["enabled"]:
+        v_model_name = f"groq/{CONFIG['verification']['model']}"
         if on_step:
-            await on_step({"step": "verify", "status": "started", "model": "groq/llama-3.3-70b"})
+            await on_step({"step": "verify", "status": "started", "model": v_model_name})
         
-        decision_trace.append(_trace("verify", "started", model="groq/llama-3.3-70b-versatile"))
+        decision_trace.append(_trace("verify", "started", model=v_model_name))
         
         try:
             analysis_json = json.dumps(analysis.model_dump(), indent=2)
@@ -261,7 +262,7 @@ async def process_audio(audio_file_path: str, on_step=None) -> PipelineResponse:
             decision_trace.append(_trace(
                 "verify", "skipped",
                 reason=f"Verification failed ({str(e)}), proceeding with unverified analysis",
-                model="groq/llama-3.3-70b-versatile",
+                model=v_model_name,
             ))
             verification = VerificationResult(
                 audit_summary="Verification skipped due to error",

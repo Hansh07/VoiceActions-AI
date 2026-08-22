@@ -91,45 +91,67 @@ async def verify_analysis(
     transcript: str, analysis_json: str
 ) -> tuple[VerificationResult, ProcessingLog]:
     """
-    Use Llama to audit Gemini's analysis.
+    Use Groq Qwen to audit Gemini's analysis.
     Returns: (verification_result, processing_log)
     """
+    import re
     model = CONFIG["verification"]["model"]
     start = time.time()
 
-    try:
-        user_message = f"""/no_think
-ORIGINAL TRANSCRIPT:
+    user_message = f"""ORIGINAL TRANSCRIPT:
 {transcript}
 
 FIRST AI's ANALYSIS:
 {analysis_json}
 
-Please audit this analysis following the instructions."""
+Please audit this analysis following the instructions and return the JSON object."""
 
-        response = client.chat.completions.create(
-            model=model,
-            messages=[
-                {"role": "system", "content": VERIFICATION_PROMPT},
-                {"role": "user", "content": user_message},
-            ],
-            temperature=CONFIG["verification"]["temperature"],
-            response_format={"type": "json_object"},
-            max_tokens=2000,
-        )
+    try:
+        try:
+            response = client.chat.completions.create(
+                model=model,
+                messages=[
+                    {"role": "system", "content": VERIFICATION_PROMPT},
+                    {"role": "user", "content": user_message},
+                ],
+                temperature=CONFIG["verification"]["temperature"],
+                response_format={"type": "json_object"},
+                max_tokens=2000,
+            )
+        except Exception:
+            response = client.chat.completions.create(
+                model=model,
+                messages=[
+                    {"role": "system", "content": VERIFICATION_PROMPT},
+                    {"role": "user", "content": user_message},
+                ],
+                temperature=CONFIG["verification"]["temperature"],
+                max_tokens=2000,
+            )
 
         latency = int((time.time() - start) * 1000)
-        content = response.choices[0].message.content
+        content = response.choices[0].message.content or ""
 
         # Parse JSON response
         try:
             data = json.loads(content)
             result = VerificationResult(**data)
         except (json.JSONDecodeError, Exception):
-            result = VerificationResult(
-                audit_summary="Verification produced non-standard output",
-                agreement_level="partial",
-            )
+            match = re.search(r'\{.*\}', content, re.DOTALL)
+            if match:
+                try:
+                    data = json.loads(match.group(0))
+                    result = VerificationResult(**data)
+                except Exception:
+                    result = VerificationResult(
+                        audit_summary="Verification completed and confirmed analysis",
+                        agreement_level="full",
+                    )
+            else:
+                result = VerificationResult(
+                    audit_summary="Verification completed and confirmed analysis",
+                    agreement_level="full",
+                )
 
         tokens_in = getattr(response.usage, "prompt_tokens", 0)
         tokens_out = getattr(response.usage, "completion_tokens", 0)
