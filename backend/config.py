@@ -58,7 +58,7 @@ CONFIG = {
     "embedding": {
         "provider": "gemini",
         "model": "gemini-embedding-001",
-        "dimensions": 3072,
+        "dimensions": 768,
     },
     "features": {
         "conflict_detection": True,

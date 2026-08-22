@@ -18,6 +18,7 @@ async def generate_embedding(text: str) -> list[float]:
             model=f"models/{model}",
             content=text,
             task_type="retrieval_document",
+            output_dimensionality=768,
         )
         return result["embedding"]
     except Exception as e:
@@ -33,6 +34,7 @@ async def generate_query_embedding(text: str) -> list[float]:
             model=f"models/{model}",
             content=text,
             task_type="retrieval_query",
+            output_dimensionality=768,
         )
         return result["embedding"]
     except Exception as e:

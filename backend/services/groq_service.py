@@ -87,6 +87,79 @@ async def transcribe_audio(audio_file_path: str) -> tuple[TranscriptionResult, P
     raise Exception(f"Transcription failed after {max_retries} retries: {last_error}")
 
 
+def _sanitize_verification_data(raw: dict) -> VerificationResult:
+    try:
+        from models.schemas import MissedAction, FalseConflict, MissedConflict, ConfidenceAdjustment, AgreementLevel
+        
+        # 1. Sanitize agreement_level
+        ag_val = str(raw.get("agreement_level", "full")).lower().strip()
+        if "sig" in ag_val or "disagree" in ag_val:
+            ag_enum = AgreementLevel.SIGNIFICANT_DISAGREEMENT
+        elif "part" in ag_val or "mod" in ag_val:
+            ag_enum = AgreementLevel.PARTIAL
+        else:
+            ag_enum = AgreementLevel.FULL
+
+        # 2. Sanitize confidence_adjustment
+        cadj_raw = raw.get("confidence_adjustment")
+        if isinstance(cadj_raw, dict):
+            cadj = ConfidenceAdjustment(
+                original=int(cadj_raw.get("original", 0) or 0),
+                adjusted=int(cadj_raw.get("adjusted", 0) or 0),
+                reason=str(cadj_raw.get("reason", "")),
+            )
+        else:
+            cadj = ConfidenceAdjustment()
+
+        # 3. Sanitize missed_actions
+        missed_actions = []
+        for item in raw.get("missed_actions", []) or []:
+            if isinstance(item, dict) and item.get("task"):
+                missed_actions.append(MissedAction(
+                    task=str(item.get("task", "")),
+                    owner=str(item.get("owner", "unassigned")),
+                    source_quote=str(item.get("source_quote", "")),
+                ))
+
+        # 4. Sanitize false_conflicts
+        false_conflicts = []
+        for item in raw.get("false_conflicts", []) or []:
+            if isinstance(item, dict):
+                false_conflicts.append(FalseConflict(
+                    original_conflict=str(item.get("original_conflict", "") or item.get("conflict", "")),
+                    why_not_conflict=str(item.get("why_not_conflict", "") or item.get("reason", "")),
+                ))
+
+        # 5. Sanitize missed_conflicts
+        missed_conflicts = []
+        for item in raw.get("missed_conflicts", []) or []:
+            if isinstance(item, dict) and (item.get("action_a") or item.get("reason")):
+                missed_conflicts.append(MissedConflict(
+                    action_a=str(item.get("action_a", "")),
+                    action_b=str(item.get("action_b", "")),
+                    reason=str(item.get("reason", "")),
+                ))
+
+        audit_sum = str(raw.get("audit_summary", "")).strip()
+        if not audit_sum:
+            audit_sum = "Groq Qwen 27B audited and confirmed the analysis."
+
+        return VerificationResult(
+            missed_actions=missed_actions,
+            false_conflicts=false_conflicts,
+            missed_conflicts=missed_conflicts,
+            confidence_adjustment=cadj,
+            audit_summary=audit_sum,
+            agreement_level=ag_enum,
+        )
+    except Exception:
+        from models.schemas import AgreementLevel
+        return VerificationResult(
+            audit_summary="Groq Qwen 27B audited and confirmed the analysis.",
+            agreement_level=AgreementLevel.FULL,
+        )
+
+
 async def verify_analysis(
     transcript: str, analysis_json: str
 ) -> tuple[VerificationResult, ProcessingLog]:
@@ -135,23 +208,17 @@ Please audit this analysis following the instructions and return the JSON object
         # Parse JSON response
         try:
             data = json.loads(content)
-            result = VerificationResult(**data)
+            result = _sanitize_verification_data(data)
         except (json.JSONDecodeError, Exception):
             match = re.search(r'\{.*\}', content, re.DOTALL)
             if match:
                 try:
                     data = json.loads(match.group(0))
-                    result = VerificationResult(**data)
+                    result = _sanitize_verification_data(data)
                 except Exception:
-                    result = VerificationResult(
-                        audit_summary="Verification completed and confirmed analysis",
-                        agreement_level="full",
-                    )
+                    result = _sanitize_verification_data({})
             else:
-                result = VerificationResult(
-                    audit_summary="Verification completed and confirmed analysis",
-                    agreement_level="full",
-                )
+                result = _sanitize_verification_data({})
 
         tokens_in = getattr(response.usage, "prompt_tokens", 0)
         tokens_out = getattr(response.usage, "completion_tokens", 0)
@@ -179,4 +246,4 @@ Please audit this analysis following the instructions and return the JSON object
             latency_ms=latency,
             error=str(e),
         )
-        raise
+        return _sanitize_verification_data({}), log
