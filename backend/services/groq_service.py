@@ -32,18 +32,24 @@ async def transcribe_audio(audio_file_path: str) -> tuple[TranscriptionResult, P
     while retries <= max_retries:
         try:
             with open(audio_file_path, "rb") as audio_file:
+                # Force Hindi in Devanagari script or Hinglish instead of Urdu Arabic script
+                prompt_text = "Hindi speech transcript in Devanagari script (हिंदी) and Indian English/Hinglish (e.g. राम, श्याम, सीता, पटना, दिल्ली, काम करो, रिपोर्ट भेजो). Always transcribe Hindi words in Devanagari script or English alphabet, never in Urdu Arabic script."
                 response = client.audio.transcriptions.create(
                     file=audio_file,
                     model=model,
                     response_format="verbose_json",
-                    language=None,  # Auto-detect
+                    language=None,  # Auto-detect with prompt bias
+                    prompt=prompt_text,
                 )
 
             latency = int((time.time() - start) * 1000)
+            lang = getattr(response, "language", "unknown")
+            if lang == "ur" or lang == "urdu":
+                lang = "Hindi"
 
             result = TranscriptionResult(
                 text=response.text,
-                language=getattr(response, "language", "unknown"),
+                language=lang,
                 duration_seconds=getattr(response, "duration", 0.0),
                 segments=[
                     {"text": seg.get("text", ""), "start": seg.get("start", 0), "end": seg.get("end", 0)}

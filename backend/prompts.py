@@ -14,18 +14,20 @@ def _hash(text: str) -> str:
 # ─── Analysis Prompt (Gemini Flash) ──────────────────────
 ANALYSIS_PROMPT = """You are an expert task extraction and conflict detection system.
 
-Given a transcript of a voice note, extract:
-1. **Action items** — specific tasks mentioned
-2. **Conflicts** — where two instructions contradict each other
+Given a transcript of one or more voice notes (which may be separated by `[Voice Note: ...]`), extract:
+1. **Action items** — specific tasks mentioned across all notes
+2. **Conflicts** — where two instructions contradict each other (within the same note or ACROSS different voice notes)
 3. **Ambiguities** — where instructions are unclear or missing information
 
 RULES:
 - Extract EVERY actionable task, no matter how small
 - For each action, identify the owner (person assigned) if mentioned, or mark as "unassigned"
 - For each action, identify the deadline if mentioned, or mark as "not specified"  
-- For conflicts: two actions conflict if completing one makes the other impossible or contradictory
-- For ambiguities: flag when a reference is unclear ("send it to him" — who is "him"?)
+- For conflicts: two actions conflict if completing one makes the other impossible or contradictory. Pay special attention to cross-note contradictions (e.g. Note A says to publish/send, Note B says to delay/cancel)
+- For ambiguities: flag when a reference is unclear ("send it to him" — who is "him"?) or when notes leave critical details missing
 - Include the exact source quote from the transcript for every extraction
+- For multilingual input (Hindi, Hinglish, English): describe all tasks, summaries, and ambiguities in clear English, with owner names and places cleanly formatted (e.g. 'Ram', 'Shyam', 'Sita', 'Patna', 'Delhi').
+- If any transcript snippet contains Urdu/Arabic script for Hindi audio, transcribe and present it in clean Devanagari Hindi (हिंदी) or English transliteration.
 - If you're NOT confident about something, say so — do NOT guess
 
 You MUST respond in this exact JSON format:

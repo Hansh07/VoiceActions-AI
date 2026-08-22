@@ -24,7 +24,7 @@ CONFIG = {
         },
         "fallback": {
             "provider": "gemini",
-            "model": "gemini-3.6-flash",
+            "model": "gemini-flash-latest",
         },
         "max_retries": 2,
         "timeout_seconds": 30,
@@ -32,7 +32,7 @@ CONFIG = {
     "analysis": {
         "primary": {
             "provider": "gemini",
-            "model": "gemini-3.6-flash",
+            "model": "gemini-flash-latest",
         },
         "fallback": {
             "provider": "groq",

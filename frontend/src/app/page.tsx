@@ -10,7 +10,7 @@ import ConfidenceBar from "@/components/ConfidenceBar";
 import CostTracker from "@/components/CostTracker";
 import DecisionTrace from "@/components/DecisionTrace";
 import {
-  processAudioStream, processText,
+  processAudioStream, processBatchAudioStream, processText,
   type PipelineResponse, type StepEvent,
 } from "@/lib/api";
 
@@ -172,7 +172,16 @@ export default function Home() {
   const handleAudioComplete = useCallback((blob: Blob) => runPipeline(async () => {
     try {
       const res = await processAudioStream(blob, (e) => setSteps((p) => [...p, e]));
-      if (res) { setResult(res); setState("done"); } else throw new Error("No response");
+      if (res) {
+        setResult(res);
+        setSteps([
+          { step: "transcribe", status: res.transcription ? "done" : "skipped" },
+          { step: "analyze", status: "done" },
+          { step: "verify", status: res.verification ? "done" : "skipped" },
+          { step: "store", status: "done" },
+        ]);
+        setState("done");
+      } else throw new Error("No response");
     } catch (err: unknown) {
       // Only fallback to demo if it's a network/connection error (backend offline)
       const errMsg = err instanceof Error ? err.message : "";
@@ -184,6 +193,34 @@ export default function Home() {
         setResult(res); setState("done");
       } else {
         // Backend returned an error (bad file format, etc.) → show the actual error
+        throw err;
+      }
+    }
+  }), [runPipeline]);
+
+  const handleBatchAudioComplete = useCallback((files: File[]) => runPipeline(async () => {
+    try {
+      const res = await processBatchAudioStream(files, (e) => setSteps((p) => [...p, e]));
+      if (res) {
+        setResult(res);
+        setSteps([
+          { step: "transcribe", status: res.transcription ? "done" : "skipped" },
+          { step: "analyze", status: "done" },
+          { step: "verify", status: res.verification ? "done" : "skipped" },
+          { step: "store", status: "done" },
+        ]);
+        setState("done");
+      } else throw new Error("No response from batch audio processing");
+    } catch (err: unknown) {
+      const errMsg = err instanceof Error ? err.message : "";
+      if (errMsg.includes("fetch") || errMsg.includes("Failed") || errMsg.includes("NetworkError") || errMsg.includes("ECONNREFUSED")) {
+        const combinedSimText = files
+          .map((f, i) => `[Voice Note: ${f.name}]\nTask from ${f.name.replace(/\.[^/.]+$/, "")}: Please coordinate on project deliverables and confirm status.`)
+          .join("\n\n---\n\n");
+        setSteps([]);
+        const res = await simulatePipeline(combinedSimText, (e) => setSteps((p) => [...p, e]));
+        setResult(res); setState("done");
+      } else {
         throw err;
       }
     }
@@ -318,6 +355,7 @@ export default function Home() {
                 {inputMode === "voice" && (
                   <AudioRecorder
                     onRecordingComplete={handleAudioComplete}
+                    onBatchAudioComplete={handleBatchAudioComplete}
                     onTextSubmit={handleTextSubmit}
                     onLiveTranscript={setLiveTranscript}
                   />

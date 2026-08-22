@@ -161,6 +161,68 @@ export async function processAudioStream(
 }
 
 /**
+ * Process MULTIPLE audio files at once via batch streaming endpoint.
+ * Transcribes each file individually, then analyzes the combined transcript
+ * to detect cross-file conflicts and extract unified action items.
+ */
+export async function processBatchAudioStream(
+  files: File[],
+  onStep: (event: StepEvent) => void
+): Promise<PipelineResponse | null> {
+  const formData = new FormData();
+  for (const file of files) {
+    formData.append("files", file, file.name);
+  }
+
+  try {
+    const response = await fetch(`${API_BASE}/api/process-batch`, {
+      method: "POST",
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`API error: ${response.status} — ${error}`);
+    }
+
+    const reader = response.body?.getReader();
+    if (!reader) throw new Error("No response body");
+
+    const decoder = new TextDecoder();
+    let finalResult: PipelineResponse | null = null;
+    let buffer = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() || "";
+
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        try {
+          const event = JSON.parse(line);
+          if (event.step === "final_result") {
+            finalResult = event.data;
+          } else {
+            onStep(event);
+          }
+        } catch {
+          // Skip malformed lines
+        }
+      }
+    }
+
+    return finalResult;
+  } catch (error) {
+    console.error("Batch stream processing failed:", error);
+    throw error;
+  }
+}
+
+/**
  * Process audio via sync endpoint (simpler, for testing).
  */
 export async function processAudioSync(
