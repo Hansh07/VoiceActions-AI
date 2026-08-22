@@ -130,8 +130,8 @@ function getMockResponse(text: string): PipelineResponse {
       missed_actions: [], false_conflicts: [], missed_conflicts: [],
       confidence_adjustment: { original: confidence, adjusted: confidence - (hasConflicts ? 3 : 0), reason: hasConflicts ? "Conflicts reduce confidence" : "All actions verified" },
       audit_summary: hasConflicts
-        ? `Llama 3.3 confirms: ${conflicts.length} conflict(s) found. ${extracted.length} actions extracted correctly.`
-        : `Llama 3.3 confirms: All ${extracted.length} actions verified. No conflicts. High confidence.`,
+        ? `Groq Qwen 27B confirms: ${conflicts.length} conflict(s) found. ${extracted.length} actions extracted correctly.`
+        : `Groq Qwen 27B confirms: All ${extracted.length} actions verified. No conflicts. High confidence.`,
       agreement_level: hasConflicts ? "partial" : "full",
     },
     final_confidence: confidence - (hasConflicts ? 3 : 0),
@@ -139,14 +139,14 @@ function getMockResponse(text: string): PipelineResponse {
     total_latency_ms: 3420,
     decision_trace: [
       { timestamp: new Date().toISOString(), step: "transcribe", action: "skipped", reason: "Text input", model: "", latency_ms: 0 },
-      { timestamp: new Date().toISOString(), step: "analyze", action: "success", reason: `Extracted ${extracted.length} actions`, model: "gemini-2.0-flash", latency_ms: 1840 },
-      { timestamp: new Date().toISOString(), step: "verify", action: "success", reason: hasConflicts ? "Conflicts confirmed" : "All verified", model: "llama-3.3-70b-versatile", latency_ms: 1320 },
+      { timestamp: new Date().toISOString(), step: "analyze", action: "success", reason: `Extracted ${extracted.length} actions`, model: "gemini-flash-lite-latest", latency_ms: 1840 },
+      { timestamp: new Date().toISOString(), step: "verify", action: "success", reason: hasConflicts ? "Conflicts confirmed" : "All verified", model: "groq/qwen3.6-27b", latency_ms: 1320 },
       { timestamp: new Date().toISOString(), step: "store", action: "success", reason: "Saved", model: "", latency_ms: 260 },
     ],
     logs: [
-      { step: "analyze", model_used: "gemini-2.0-flash", tokens_input: 420, tokens_output: 680, latency_ms: 1840, estimated_cost_usd: 0.0011, retries: 0, fallback_used: false },
-      { step: "verify", model_used: "llama-3.3-70b-versatile", tokens_input: 890, tokens_output: 340, latency_ms: 1320, estimated_cost_usd: 0.0006, retries: 0, fallback_used: false },
-      { step: "store", model_used: "text-embedding-004", tokens_input: 180, tokens_output: 0, latency_ms: 260, estimated_cost_usd: 0.0001, retries: 0, fallback_used: false },
+      { step: "analyze", model_used: "gemini-flash-lite-latest", tokens_input: 420, tokens_output: 680, latency_ms: 1840, estimated_cost_usd: 0.0011, retries: 0, fallback_used: false },
+      { step: "verify", model_used: "groq/qwen3.6-27b", tokens_input: 890, tokens_output: 340, latency_ms: 1320, estimated_cost_usd: 0.0006, retries: 0, fallback_used: false },
+      { step: "store", model_used: "gemini-embedding-001", tokens_input: 180, tokens_output: 0, latency_ms: 260, estimated_cost_usd: 0.0001, retries: 0, fallback_used: false },
     ],
     voice_note_id: "demo-" + Date.now(),
   };
@@ -156,13 +156,13 @@ async function simulatePipeline(text: string, onStep: (e: StepEvent) => void): P
   const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
   onStep({ step: "transcribe", status: "skipped" });
   await delay(300);
-  onStep({ step: "analyze", status: "started", model: "gemini-2.0-flash" });
+  onStep({ step: "analyze", status: "started", model: "gemini-flash-lite-latest" });
   await delay(1200);
-  onStep({ step: "analyze", status: "done", model: "gemini-2.0-flash" });
+  onStep({ step: "analyze", status: "done", model: "gemini-flash-lite-latest" });
   await delay(200);
-  onStep({ step: "verify", status: "started", model: "llama-3.3-70b-versatile" });
+  onStep({ step: "verify", status: "started", model: "groq/qwen3.6-27b" });
   await delay(900);
-  onStep({ step: "verify", status: "done", model: "llama-3.3-70b-versatile" });
+  onStep({ step: "verify", status: "done", model: "groq/qwen3.6-27b" });
   await delay(200);
   onStep({ step: "store", status: "started" });
   await delay(400);
@@ -253,7 +253,7 @@ export default function Home() {
   const handleTextSubmit = useCallback((text: string) => runPipeline(async () => {
     try {
       // Try real backend first
-      setSteps([{ step: "transcribe", status: "skipped" }, { step: "analyze", status: "started", model: "gemini-2.0-flash" }]);
+      setSteps([{ step: "transcribe", status: "skipped" }, { step: "analyze", status: "started", model: "gemini-flash-lite-latest" }]);
       const res = await processText(text);
       setResult(res); setState("done");
       setSteps((p) => [...p, { step: "analyze", status: "done" }, { step: "verify", status: "done" }, { step: "store", status: "done" }]);
@@ -313,7 +313,7 @@ export default function Home() {
             <div className="animate-slide-up">
               <div className="inline-flex items-center gap-1.5 text-xs text-[var(--text-muted)] bg-white border border-[var(--border)] px-3 py-1.5 rounded-full mb-6 shadow-sm">
                 <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                Powered by Groq Whisper · Gemini Flash · Llama 3.3 70B
+                Powered by Groq Whisper · Gemini Flash · Groq Qwen 27B
               </div>
 
               <h1 className="text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.08] mb-5">
@@ -636,7 +636,7 @@ export default function Home() {
                   )}
                   {result.verification?.audit_summary && (
                     <div className="card-flat rounded-2xl p-6 animate-slide-up" style={{ animationDelay: "400ms" }}>
-                      <h4 className="text-xs font-bold text-[var(--text-faint)] uppercase tracking-wider mb-2">🔍 Verification Audit — Llama 3.3</h4>
+                      <h4 className="text-xs font-bold text-[var(--text-faint)] uppercase tracking-wider mb-2">🔍 Verification Audit — Groq Qwen 27B</h4>
                       <p className="text-sm text-[var(--text-body)] leading-relaxed">{result.verification.audit_summary}</p>
                     </div>
                   )}
