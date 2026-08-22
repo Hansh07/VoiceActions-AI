@@ -33,6 +33,8 @@ Live link - https://voice-actions-fjvg3zmgo-hanshraj317-4511s-projects.vercel.ap
 - [Future Roadmap](#-future-roadmap)
 
 ---
+<img width="1917" height="873" alt="image" src="https://github.com/user-attachments/assets/fea4258b-7920-472e-a8f2-eaa34430d481" />
+
 
 ## 🎯 The Problem
 
