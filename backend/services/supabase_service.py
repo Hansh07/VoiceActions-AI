@@ -44,7 +44,7 @@ async def store_voice_note(
         return None
 
 
-async def store_actions(voice_note_id: str, actions: list[dict], embeddings: list[list[float]] = []):
+async def store_actions(voice_note_id: str, actions: list, embeddings: list[list[float]] = []):
     """Store action items with optional embeddings for pgvector."""
     client = get_client()
     if not client:
@@ -52,25 +52,32 @@ async def store_actions(voice_note_id: str, actions: list[dict], embeddings: lis
 
     try:
         for i, action in enumerate(actions):
+            task = action.task if hasattr(action, "task") else (action.get("task", "") if isinstance(action, dict) else "")
+            owner = action.owner if hasattr(action, "owner") else (action.get("owner", "unassigned") if isinstance(action, dict) else "unassigned")
+            deadline = action.deadline if hasattr(action, "deadline") else (action.get("deadline", "not specified") if isinstance(action, dict) else "not specified")
+            priority = action.priority if hasattr(action, "priority") else (action.get("priority", "medium") if isinstance(action, dict) else "medium")
+            if hasattr(priority, "value"):
+                priority = priority.value
+            source_quote = action.source_quote if hasattr(action, "source_quote") else (action.get("source_quote", "") if isinstance(action, dict) else "")
+
             row = {
                 "voice_note_id": voice_note_id,
-                "task": action.get("task", ""),
-                "owner": action.get("owner", "unassigned"),
-                "deadline": action.get("deadline", "not specified"),
-                "priority": action.get("priority", "medium"),
-                "source_quote": action.get("source_quote", ""),
-                "status": "pending",
+                "task": task,
+                "owner": owner,
+                "deadline": deadline,
+                "priority": str(priority),
+                "source_quote": source_quote,
             }
             # Add embedding if available
             if i < len(embeddings) and embeddings[i]:
                 row["embedding"] = json.dumps(embeddings[i])
 
-            client.table("actions").insert(row).execute()
+            client.table("action_items").insert(row).execute()
     except Exception as e:
         print(f"[Supabase] Failed to store actions: {e}")
 
 
-async def store_conflicts(voice_note_id: str, conflicts: list[dict]):
+async def store_conflicts(voice_note_id: str, conflicts: list):
     """Store detected conflicts."""
     client = get_client()
     if not client:
@@ -78,11 +85,17 @@ async def store_conflicts(voice_note_id: str, conflicts: list[dict]):
 
     try:
         for conflict in conflicts:
+            reason = conflict.reason if hasattr(conflict, "reason") else (conflict.get("reason", "") if isinstance(conflict, dict) else "")
+            severity = conflict.severity if hasattr(conflict, "severity") else (conflict.get("severity", "medium") if isinstance(conflict, dict) else "medium")
+            if hasattr(severity, "value"):
+                severity = severity.value
+            affected_people = conflict.affected_people if hasattr(conflict, "affected_people") else (conflict.get("affected_people", []) if isinstance(conflict, dict) else [])
+
             client.table("conflicts").insert({
                 "voice_note_id": voice_note_id,
-                "reason": conflict.get("reason", ""),
-                "severity": conflict.get("severity", "medium"),
-                "affected_people": conflict.get("affected_people", []),
+                "reason": reason,
+                "severity": str(severity),
+                "affected_people": affected_people,
             }).execute()
     except Exception as e:
         print(f"[Supabase] Failed to store conflicts: {e}")

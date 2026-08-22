@@ -46,6 +46,9 @@ async def analyze_transcript(transcript: str) -> tuple[AnalysisResult, Processin
             # Parse JSON response
             try:
                 data = json.loads(content)
+                if ("confidence" not in data or data["confidence"] == 0) and data.get("actions"):
+                    # Default high baseline confidence when actions are clearly extracted
+                    data["confidence"] = 85 if not data.get("conflicts") else 75
                 result = AnalysisResult(**data)
             except (json.JSONDecodeError, Exception) as parse_err:
                 # Try to extract JSON from response

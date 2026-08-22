@@ -456,7 +456,7 @@ async def process_text_input(body: TextInput):
             analysis_json = json_mod.dumps(analysis.model_dump(), indent=2)
             verification, v_log = await groq_service.verify_analysis(body.text, analysis_json)
             logs.append(v_log)
-            if verification.confidence_adjustment.adjusted:
+            if verification and verification.confidence_adjustment and verification.confidence_adjustment.adjusted > 0:
                 final_confidence = verification.confidence_adjustment.adjusted
         except Exception:
             pass
