@@ -350,12 +350,26 @@ async def process_batch_audio(files: list[UploadFile] = File(...)):
                 voice_note_id = await supabase_service.store_voice_note(
                     transcript=combined_text,
                     language=combined_transcription.language,
-                    duration=combined_transcription.duration_seconds,
+                    duration_seconds=combined_transcription.duration_seconds,
                 )
                 if analysis and voice_note_id:
-                    await supabase_service.store_actions(voice_note_id, analysis.actions)
+                    # Generate embeddings for semantic search
+                    action_texts = [a.task for a in analysis.actions]
+                    embeddings = []
+                    try:
+                        embeddings = await embedding_service.generate_batch_embeddings(action_texts)
+                    except Exception:
+                        pass
+                    await supabase_service.store_actions(
+                        voice_note_id,
+                        [a.model_dump() for a in analysis.actions],
+                        embeddings,
+                    )
                     if analysis.conflicts:
-                        await supabase_service.store_conflicts(voice_note_id, analysis.conflicts)
+                        await supabase_service.store_conflicts(
+                            voice_note_id,
+                            [c.model_dump() for c in analysis.conflicts],
+                        )
                 await queue.put({"step": "store", "status": "done"})
             except Exception:
                 await queue.put({"step": "store", "status": "skipped"})
@@ -464,6 +478,34 @@ async def process_text_input(body: TextInput):
     total_cost = sum(log.estimated_cost_usd for log in logs)
     total_latency = int((time.time() - pipeline_start) * 1000)
     
+    # Store to Supabase
+    voice_note_id = None
+    try:
+        voice_note_id = await supabase_service.store_voice_note(
+            transcript=body.text,
+            language="text-input",
+            duration_seconds=0,
+        )
+        if voice_note_id and analysis.actions:
+            action_texts = [a.task for a in analysis.actions]
+            embeddings = []
+            try:
+                embeddings = await embedding_service.generate_batch_embeddings(action_texts)
+            except Exception:
+                pass
+            await supabase_service.store_actions(
+                voice_note_id,
+                [a.model_dump() for a in analysis.actions],
+                embeddings,
+            )
+            if analysis.conflicts:
+                await supabase_service.store_conflicts(
+                    voice_note_id,
+                    [c.model_dump() for c in analysis.conflicts],
+                )
+    except Exception:
+        pass
+
     return PipelineResponse(
         transcription=transcription,
         analysis=analysis,
@@ -473,6 +515,7 @@ async def process_text_input(body: TextInput):
         total_latency_ms=total_latency,
         decision_trace=decision_trace,
         logs=logs,
+        voice_note_id=voice_note_id,
     ).model_dump()
 
 
