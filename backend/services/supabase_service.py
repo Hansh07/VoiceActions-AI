@@ -89,14 +89,16 @@ async def store_conflicts(voice_note_id: str, conflicts: list):
             severity = conflict.severity if hasattr(conflict, "severity") else (conflict.get("severity", "medium") if isinstance(conflict, dict) else "medium")
             if hasattr(severity, "value"):
                 severity = severity.value
-            affected_people = conflict.affected_people if hasattr(conflict, "affected_people") else (conflict.get("affected_people", []) if isinstance(conflict, dict) else [])
-
-            client.table("conflicts").insert({
+            
+            row = {
                 "voice_note_id": voice_note_id,
                 "reason": reason,
                 "severity": str(severity),
-                "affected_people": affected_people,
-            }).execute()
+                "action_a": conflict.action_a if hasattr(conflict, "action_a") else (conflict.get("action_a", "") if isinstance(conflict, dict) else ""),
+                "action_b": conflict.action_b if hasattr(conflict, "action_b") else (conflict.get("action_b", "") if isinstance(conflict, dict) else ""),
+            }
+
+            client.table("conflicts").insert(row).execute()
     except Exception as e:
         print(f"[Supabase] Failed to store conflicts: {e}")
 
