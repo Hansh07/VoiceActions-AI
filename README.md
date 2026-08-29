@@ -7,8 +7,8 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Next.js-16-black?logo=next.js" alt="Next.js 16" />
   <img src="https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi" alt="FastAPI" />
-  <img src="https://img.shields.io/badge/Gemini-3.6_Flash-4285F4?logo=google" alt="Gemini" />
-  <img src="https://img.shields.io/badge/Groq-Whisper_+_Qwen-F55036?logo=groq" alt="Groq" />
+  <img src="https://img.shields.io/badge/Gemini-Flash_Lite-4285F4?logo=google" alt="Gemini" />
+  <img src="https://img.shields.io/badge/Groq-Whisper_+_Qwen_27B-F55036?logo=groq" alt="Groq" />
   <img src="https://img.shields.io/badge/Supabase-pgvector-3ECF8E?logo=supabase" alt="Supabase" />
 </p>
 
@@ -85,7 +85,7 @@ Voice Note / Text Input
            │
            ▼
 ┌──────────────────────┐
-│  STEP 2: ANALYZE     │ ← Google Gemini 3.6 Flash
+│  STEP 2: ANALYZE     │ ← Google Gemini Flash Lite
 │  Text → Structured   │   Extracts: actions, conflicts,
 │  JSON Output         │   ambiguities, confidence score
 └──────────┬───────────┘
@@ -129,7 +129,7 @@ Voice Note / Text Input
 
 | # | Layer | Technology | What It Does |
 |---|-------|-----------|-------------|
-| 1 | **AI Models** | Groq Whisper + Gemini 3.6 Flash + Qwen 27B | Three models: transcribe → analyze → verify |
+| 1 | **AI Models** | Groq Whisper + Gemini Flash Lite + Qwen 27B | Three models: transcribe → analyze → verify |
 | 2 | **Agent Orchestration** | Hand-built async pipeline (NOT LangChain) | Retries, fallbacks, decision trace — zero framework overhead |
 | 3 | **Retrieval (RAG)** | Supabase pgvector + Gemini Embeddings | Semantic search over past action items using cosine similarity |
 | 4 | **Frontend** | Next.js 16 + TypeScript | Real-time streaming UI, 3 input modes, glassmorphism design |
@@ -160,7 +160,7 @@ VoiceActions-AI/
 │   ├── services/
 │   │   ├── groq_service.py     # Whisper transcription + Qwen verification
 │   │   ├── gemini_service.py   # Action extraction + conflict detection
-│   │   ├── embedding_service.py# Gemini text-embedding-004 (768-dim)
+│   │   ├── embedding_service.py# Gemini gemini-embedding-001 (768-dim)
 │   │   └── supabase_service.py # Database CRUD + audio storage
 │   ├── models/
 │   │   └── schemas.py          # Pydantic models for type-safe data flow
@@ -272,8 +272,10 @@ Just run `cd frontend && npm run dev` and try the **Text** input mode.
 | `POST` | `/api/process` | **Main endpoint** — streams NDJSON pipeline events |
 | `POST` | `/api/process-sync` | Synchronous version — returns complete result |
 | `POST` | `/api/process-text` | Process raw text (skip transcription) |
-| `POST` | `/api/search` | Semantic search over past action items |
-| `GET` | `/api/history` | Retrieve past voice notes and results |
+| `POST` | `/api/process-batch` | **Multi-file upload** — transcribe + cross-analyze multiple audio files |
+| `POST` | `/api/search` | Semantic search over past action items (pgvector) |
+| `GET` | `/api/history` | Retrieve past voice notes with actions and conflicts |
+| `GET` | `/api/config` | Feature flags and model config for frontend |
 
 ### Example: Process Text
 
@@ -294,7 +296,7 @@ Most AI tools use a single model and present its output as truth. We don't.
 ### Our Verification Architecture
 
 ```
-Gemini 3.6 Flash (Analyzer)          Qwen 27B (Auditor)
+Gemini Flash Lite (Analyzer)          Qwen 27B (Auditor)
 ─────────────────────────         ─────────────────────────
 Extracts actions, conflicts,      Reviews Gemini's output and:
 ambiguities from transcript  →    ✓ Finds missed action items
@@ -323,7 +325,7 @@ ambiguities from transcript  →    ✓ Finds missed action items
 
 | Claim | Evidence |
 |-------|---------|
-| **Couldn't exist in 2023** | Groq Whisper, Gemini 3.6 Flash, and Qwen 27B on Groq are all 2024+ releases |
+| **Couldn't exist in 2023** | Groq Whisper, Gemini Flash Lite, and Qwen 27B on Groq are all 2024+ releases |
 | **Not a wrapper** | Hand-built orchestrator with retries, fallbacks, decision trace — zero LangChain |
 | **Two-model verification** | Model A extracts → Model B audits → confidence score adjusts — a 2024+ pattern |
 | **Conflict detection** | No existing tool detects contradictions within a single speaker's voice notes |
@@ -411,7 +413,7 @@ Set environment variables in Render:
 
 ## 🧑‍💻 Built By
 
-**Hansh Raj** — Built with ❤️ for the VocaLabs AI 24-Hour Hackathon
+**Hansh Raj** & **Utkarsh** — Built with ❤️ for the VocaLabs AI 24-Hour Hackathon
 
 ---
 
