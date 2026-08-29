@@ -12,7 +12,7 @@
   <img src="https://img.shields.io/badge/Supabase-pgvector-3ECF8E?logo=supabase" alt="Supabase" />
 </p>
 
-  Live link - https://voice-actions-fjvg3zmgo-hanshraj317-4511s-projects.vercel.app/
+  Live link - https://voice-actions-ai.vercel.app/
 
 ---
 
