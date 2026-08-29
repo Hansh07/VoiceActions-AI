@@ -14,6 +14,7 @@ from models.schemas import (
     AnalysisResult,
     VerificationResult,
     TranscriptionResult,
+    AgreementLevel,
 )
 from services import groq_service, gemini_service, supabase_service, embedding_service
 from config import CONFIG
@@ -125,9 +126,9 @@ async def process_audio(audio_file_path: str, on_step=None) -> PipelineResponse:
     # STEP 2: ANALYZE (Gemini Flash → fallback Groq Llama)
     # ════════════════════════════════════════════════════════
     if on_step:
-        await on_step({"step": "analyze", "status": "started", "model": "gemini/gemini-2.0-flash"})
+        await on_step({"step": "analyze", "status": "started", "model": f"gemini/{CONFIG['analysis']['primary']['model']}"})
     
-    decision_trace.append(_trace("analyze", "started", model="gemini/gemini-2.0-flash"))
+    decision_trace.append(_trace("analyze", "started", model=f"gemini/{CONFIG['analysis']['primary']['model']}"))
     
     try:
         analysis, a_log = await gemini_service.analyze_transcript(transcription.text)
@@ -150,14 +151,14 @@ async def process_audio(audio_file_path: str, on_step=None) -> PipelineResponse:
     except Exception as e:
         decision_trace.append(_trace(
             "analyze", "fallback",
-            reason=f"Gemini failed ({str(e)}), falling back to Groq Llama",
-            model="gemini/gemini-2.0-flash",
+            reason=f"Gemini failed ({str(e)}), falling back to Groq",
+            model=f"gemini/{CONFIG['analysis']['primary']['model']}",
         ))
         
         # FALLBACK: Use Groq Llama for analysis
         try:
             if on_step:
-                await on_step({"step": "analyze", "status": "fallback", "model": "groq/llama-3.3-70b"})
+                await on_step({"step": "analyze", "status": "fallback", "model": f"groq/{CONFIG['analysis']['fallback']['model']}"})
             
             analysis, a_log = await gemini_service.analyze_transcript_fallback(transcription.text)
             logs.append(a_log)
