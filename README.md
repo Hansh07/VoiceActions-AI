@@ -12,7 +12,6 @@
   <img src="https://img.shields.io/badge/Supabase-pgvector-3ECF8E?logo=supabase" alt="Supabase" />
 </p>
 
-
 ---
 
 ## 📋 Table of Contents
